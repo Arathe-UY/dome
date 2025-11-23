@@ -8,6 +8,7 @@ from . import config
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 _motor_pins = config.MOTOR_PINS
+_active_timers = []
 
 def setup_motors():
     """Initializes the GPIO pins for all motors as outputs."""
@@ -19,7 +20,11 @@ def setup_motors():
 
 def _turn_off_motor(pin):
     """Internal function to turn off a motor."""
-    GPIO.output(pin, GPIO.LOW)
+    try:
+        GPIO.output(pin, GPIO.LOW)
+    except RuntimeError:
+        # Ignore errors if GPIO has already been cleaned up
+        pass
 
 def pulse(motor_index: int, duration_ms: int = config.PULSE_MS):
     """
@@ -37,15 +42,30 @@ def pulse(motor_index: int, duration_ms: int = config.PULSE_MS):
     logging.info(f"Pulsing motor {motor_index + 1} (pin {motor_pin}) for {duration_ms} ms.")
 
     # Turn the motor on
-    GPIO.output(motor_pin, GPIO.HIGH)
+    try:
+        GPIO.output(motor_pin, GPIO.HIGH)
+    except RuntimeError:
+        logging.error("GPIO not configured. Cannot pulse motor.")
+        return
 
     # Use a timer to turn the motor off after the specified duration.
     # This avoids blocking the main program loop.
     timer = threading.Timer(duration_ms / 1000.0, _turn_off_motor, args=[motor_pin])
+    _active_timers.append(timer)
     timer.start()
 
 def cleanup():
     """Cleans up the motor GPIO pins."""
     logging.info("Cleaning up motor GPIO pins.")
+    
+    # Cancel any pending timers
+    for timer in _active_timers:
+        if timer.is_alive():
+            timer.cancel()
+    _active_timers.clear()
+
     for pin in _motor_pins:
-        GPIO.output(pin, GPIO.LOW)
+        try:
+            GPIO.output(pin, GPIO.LOW)
+        except RuntimeError:
+            pass

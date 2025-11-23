@@ -78,7 +78,7 @@ class FeedbackLED:
                     self._pwm.start(0)
                     is_pwm = True
                 # Breathing effect using a sine wave
-                for i in range(360):
+                for i in range(0, 360, 4):
                     if self._mode != 'pulsing' or not self._running: break
                     # Map the sine wave from 0-1 to a 0-100 duty cycle
                     duty_cycle = (math.sin(math.radians(i)) + 1) / 2 * 100

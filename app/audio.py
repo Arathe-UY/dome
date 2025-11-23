@@ -8,6 +8,7 @@ from . import config
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 _audio_paths = {}
+_intro_path = None
 _is_initialized = False
 
 def init_mixer():
@@ -32,13 +33,15 @@ def load_audio_mappings():
     Scans the audio directory and maps the found files to sensors.
     Only sensors with a corresponding audio file will be active.
     """
-    global _audio_paths
+    global _audio_paths, _intro_path
     _audio_paths.clear()
+    _intro_path = None
     
     if not config.AUDIO_DIR.is_dir():
         logging.warning(f"Audio directory does not exist: {config.AUDIO_DIR}")
         return
 
+    # Map Sensor Audios
     for i in range(1, len(config.SENSOR_PINS) + 1):
         audio_file = config.AUDIO_DIR / config.AUDIO_FILES.get(i, "")
         if audio_file.is_file():
@@ -47,6 +50,14 @@ def load_audio_mappings():
         else:
             logging.warning(f"Audio not found for sensor {i} (expected file: {audio_file.name})")
 
+    # Check Intro Audio
+    intro_file = config.AUDIO_DIR / config.INTRO_AUDIO_FILE
+    if intro_file.is_file():
+        _intro_path = str(intro_file)
+        logging.info(f"Intro audio found: {intro_file.name}")
+    else:
+        logging.warning(f"Intro audio not found: {intro_file.name}")
+
 def get_available_audio_map():
     """Returns the dictionary of loaded audio mappings."""
     return {k + 1: Path(v).name for k, v in _audio_paths.items()}
@@ -54,6 +65,26 @@ def get_available_audio_map():
 def has_audio_for_sensor(sensor_index: int) -> bool:
     """Checks if an audio file is mapped to a specific sensor."""
     return sensor_index in _audio_paths
+
+def has_intro() -> bool:
+    """Checks if the intro audio file is available."""
+    return _intro_path is not None
+
+def play_intro():
+    """Plays the intro audio file once."""
+    if not _is_initialized:
+        return
+
+    if not _intro_path:
+        logging.error("Cannot play intro: File not found.")
+        return
+
+    logging.info(f"Playing intro audio: {Path(_intro_path).name}")
+    try:
+        pygame.mixer.music.load(_intro_path)
+        pygame.mixer.music.play(loops=0)
+    except pygame.error as e:
+        logging.error(f"Error playing intro {_intro_path}: {e}")
 
 def play_audio(sensor_index: int, fade_in_ms: int = 0):
     """
@@ -67,9 +98,9 @@ def play_audio(sensor_index: int, fade_in_ms: int = 0):
     try:
         pygame.mixer.music.load(audio_path)
         if fade_in_ms > 0:
-            pygame.mixer.music.play(fade_ms=fade_in_ms)
+            pygame.mixer.music.play(loops=0, fade_ms=fade_in_ms)
         else:
-            pygame.mixer.music.play()
+            pygame.mixer.music.play(loops=0)
     except pygame.error as e:
         logging.error(f"Error playing {audio_path}: {e}")
 

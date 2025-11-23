@@ -6,16 +6,20 @@ This project controls an interactive installation with 10 proximity sensors (KY-
 
 - Raspberry Pi 3 or newer.
 - 10x KY-033 Line Tracking Sensors.
+- 1x Push Button (for Start/Restart).
 - 10x Coin-type ERM Vibration Motors.
-- 1x ULN2803A Motor Driver.
-- 5V power supply for the motors.
+- 2x ULN2803A Motor Driver.
 - Speakers or headphones connected to the Raspberry Pi.
+- 5V power supply for the motors (Optional).
 
 ### Wiring Notes
 
+![Wiring Diagram](assets/wiring_diagram.png)
+
 - **Pin Mode**: BCM.
 - **Sensors**: Connect the digital outputs to the GPIO input pins defined in `app/config.py`.
-- **Motors**: Connect the motors to the ULN2803A outputs. The ULN2803A inputs connect to the Raspberry Pi's GPIO output pins.
+- **Start Button**: Connect one leg to GPIO 7 and the other to Ground (GND). The system uses an internal pull-up resistor.
+- **Motors**: Connect the motors' GND to the ULN2803A outputs. The ULN2803A inputs connect to the Raspberry Pi's GPIO output pins. Follow the pins defined in `app/config.py`.
 - **Power**: The `COM` pin of the ULN2803A must be connected to the +5V supply that powers the motors. Ensure there is a common ground (GND) between the Raspberry Pi and the motor power supply.
 
 ## Software Installation
@@ -36,7 +40,9 @@ This project controls an interactive installation with 10 proximity sensors (KY-
 ## Configuration
 
 1.  **Place Audio Files**:
-    Add your MP3 audio files to the `audios/` folder. The files must be named `audio1.mp3`, `audio2.mp3`, ..., `audio10.mp3` to be automatically mapped to the corresponding sensor and motor.
+    Add your MP3 audio files to the `audios/` folder. 
+    -   **Main Sounds**: One for each constellation. Must be named `audio1.mp3`, `audio2.mp3`, ..., `audio10.mp3` to be automatically mapped to the corresponding sensor and motor.
+    -   **Intro Sound**: Name a file `intro.mp3`. This will play when the start button is pressed.
 
     If a file is missing (e.g., `audio5.mp3`), sensor 5 and motor 5 will be disabled.
 
@@ -116,8 +122,8 @@ To have the script run automatically every time the Raspberry Pi boots up, we wi
 The system uses an LED to provide visual feedback on its current state:
 
 -   **Fast Blinking on Boot**: The `sync_drive_audios.py` script is running, downloading, or verifying audio files from Google Drive.
--   **Slow Pulse ("Breathing" Effect)**: The main application is in standby mode, ready for a sensor to be activated.
--   **Solid On**: A sensor is active, and its corresponding audio is playing.
+-   **Slow Pulse ("Breathing" Effect)**: Standby mode. The system is waiting for the Start Button (initial state) or for a user to approach a sensor.
+-   **Solid On**: Active mode. Audio is playing (either the Intro or a Constellation sound).
 -   **Fast Blinking (during operation)**: A new sensor has been detected. The system is waiting for the 3-second confirmation to switch to the new audio.
 
 ---
@@ -132,7 +138,19 @@ python3 -m app.main
 
 To stop the service, press `Ctrl+C`.
 
+### User Interaction (Button)
+
+-   **Start Experience**: Short press when the LED is pulsing ("breathing"). Plays `intro.mp3`.
+-   **Skip Intro**: Short press during the intro to skip directly to the interactive mode.
+-   **Restart**: Long press (3 seconds) at any time to reset the system to the standby state.
+
 ### Additional Commands
+
+To test the motors individually (cycles through all of them):
+
+```bash
+python3 -m app.main --test-motors
+```
 
 To check which audio files have been detected and mapped correctly, you can use the following command:
 

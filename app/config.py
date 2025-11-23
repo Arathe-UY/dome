@@ -49,6 +49,18 @@ MOTOR_PINS = [
 
 # --- Behavior Parameters ---
 
+# Feature flag: Skip the start button requirement (useful for testing)
+DEBUG_SKIP_START_BUTTON = False
+
+# Pin for the Start/Restart button
+START_BUTTON_PIN = 7
+
+# Time in seconds to hold the button to restart the experience
+BUTTON_LONG_PRESS_S = 3.0
+
+# Name of the intro audio file
+INTRO_AUDIO_FILE = "intro.mp3"
+
 # Time in seconds a sensor must be active to trigger an audio change
 DWELL_SECONDS = 3.0
 

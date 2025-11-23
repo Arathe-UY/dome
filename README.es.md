@@ -6,16 +6,20 @@ Este proyecto controla una instalación interactiva con 10 sensores de proximida
 
 - Raspberry Pi 3 o superior.
 - 10x Sensores de seguimiento de línea KY-033.
+- 1x Botón pulsador (para Inicio/Reinicio).
 - 10x Motores de vibración tipo moneda (ERM).
-- 1x Driver de motor ULN2803A.
-- Fuente de alimentación de 5V para los motores.
+- 2x Driver de motor ULN2803A.
+- Fuente de alimentación de 5V para los motores (Opcional).
 - Altavoces o auriculares conectados a la Raspberry Pi.
 
 ### Notas de Conexión
 
+![Diagrama de Conexión](assets/wiring_diagram.png)
+
 - **Modo de pines**: BCM.
 - **Sensores**: Conectar las salidas digitales a los pines GPIO de entrada definidos en `app/config.py`.
-- **Motores**: Conectar los motores a las salidas del ULN2803A. Las entradas del ULN2803A se conectan a los pines GPIO de salida de la Raspberry Pi.
+- **Botón de Inicio**: Conecta una pata al GPIO 7 y la otra a Tierra (GND). El sistema usa una resistencia pull-up interna.
+- **Motores**: Conecta el GND de los motores a las salidas del ULN2803A. Las entradas del ULN2803A se conectan a los pines GPIO de salida de la Raspberry Pi. Sigue los pines definidos en `app/config.py`.
 - **Alimentación**: El pin `COM` del ULN2803A debe conectarse a la fuente de +5V que alimenta los motores. Asegúrate de que haya una tierra común (GND) entre la Raspberry Pi y la fuente de alimentación de los motores.
 
 ## Instalación de Software
@@ -36,7 +40,9 @@ Este proyecto controla una instalación interactiva con 10 sensores de proximida
 ## Configuración
 
 1.  **Colocar los archivos de audio**:
-    Añade tus archivos de audio en formato MP3 a la carpeta `audios/`. Los archivos deben nombrarse `audio1.mp3`, `audio2.mp3`, ..., `audio10.mp3` para que se mapeen automáticamente al sensor y motor correspondiente.
+    Añade tus archivos de audio en formato MP3 a la carpeta `audios/`. 
+    -   **Sonidos Principales**: Uno para cada constelación. Deben nombrarse `audio1.mp3`, `audio2.mp3`, ..., `audio10.mp3` para que se mapeen automáticamente al sensor y motor correspondiente.
+    -   **Sonido de Introducción**: Nombra un archivo `intro.mp3`. Este sonará cuando se presione el botón de inicio.
 
     Si falta un archivo (por ejemplo, `audio5.mp3`), el sensor 5 y el motor 5 quedarán deshabilitados.
 
@@ -116,8 +122,8 @@ Para que el script se ejecute automáticamente cada vez que la Raspberry Pi se e
 El sistema utiliza un LED para proporcionar feedback visual sobre su estado actual:
 
 -   **Parpadeo rápido durante el inicio**: El script `sync_drive_audios.py` se está ejecutando, descargando o verificando los archivos de audio desde Google Drive.
--   **Pulso lento (efecto "respiración")**: La aplicación principal está en modo de espera, lista para que se active un sensor.
--   **LED encendido fijo**: Un sensor está activo y su audio correspondiente se está reproduciendo.
+-   **Pulso lento (efecto "respiración")**: Modo de espera. El sistema está esperando el botón de inicio (estado inicial) o que un usuario se acerque a un sensor.
+-   **LED encendido fijo**: Modo activo. El audio se está reproduciendo (ya sea la introducción o un sonido de constelación).
 -   **Parpadeo rápido (durante la operación)**: Se ha detectado un nuevo sensor. El sistema está esperando la confirmación de 3 segundos para cambiar al nuevo audio.
 
 ---
@@ -132,7 +138,19 @@ python3 -m app.main
 
 Para detener el servicio, presiona `Ctrl+C`.
 
+### Interacción del Usuario (Botón)
+
+-   **Iniciar Experiencia**: Pulsación corta cuando el LED está pulsando ("respirando"). Reproduce `intro.mp3`.
+-   **Saltar Intro**: Pulsación corta durante la introducción para saltar directamente al modo interactivo.
+-   **Reiniciar**: Pulsación larga (3 segundos) en cualquier momento para reiniciar el sistema al estado de espera.
+
 ### Comandos Adicionales
+
+Para probar los motores individualmente (cicla a través de todos ellos):
+
+```bash
+python3 -m app.main --test-motors
+```
 
 Para verificar qué archivos de audio han sido detectados y mapeados correctamente, puedes usar el siguiente comando:
 

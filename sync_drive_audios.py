@@ -6,9 +6,8 @@ import RPi.GPIO as GPIO
 import sys
 from google.oauth2 import service_account
 
-# Add the app path to import the LED module
-sys.path.append(os.path.join(os.path.dirname(__file__), 'app'))
-from feedback_led import FeedbackLED
+# Import the LED module from the app package
+from app.feedback_led import FeedbackLED
 
 # Configuration
 SERVICE_ACCOUNT_FILE = '/home/admin/projects/dome/credentials.json'
