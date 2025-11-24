@@ -1,3 +1,7 @@
+<div align="center">
+ <img src="assets/logo.png" alt="Project logo" width="600">
+</div>
+
 # Dome Project: Interactive Installation
 
 This project controls an interactive installation with 10 proximity sensors (KY-033), 10 vibration motors (ERM), and a synchronized audio system, all managed by a Raspberry Pi.
@@ -14,7 +18,7 @@ This project controls an interactive installation with 10 proximity sensors (KY-
 
 ### Wiring Notes
 
-![Wiring Diagram](assets/wiring_diagram.png)
+![Wiring Diagram](assets/wiringDiagram.png)
 
 - **Pin Mode**: BCM.
 - **Sensors**: Connect the digital outputs to the GPIO input pins defined in `app/config.py`.
